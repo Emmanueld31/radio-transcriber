@@ -13,10 +13,10 @@ def load_language_map(stations_csv: Path) -> dict:
             if not s or s.startswith("#"):
                 continue
             row = next(csv.reader([s]))
-            if len(row) != 3:
+            if len(row) < 3:
                 continue
-            name, url, lang = [c.strip() for c in row]
-            if name:
+            name, url, lang, *rest = [c.strip() for c in row]
+            if name and lang:
                 lang_map[name] = lang
     return lang_map
 
@@ -52,6 +52,6 @@ def transcribe_files(directory: Path, stations_csv: Path):
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Transcribe audio files in a directory.")
     p.add_argument("--dir", type=Path, required=True, help="Directory containing the .wav files to process.")
-    p.add_argument("--stations", type=Path, required=True, help="CSV with columns: name,url,lang")
+    p.add_argument("--stations", type=Path, required=True, help="CSV with columns: name,url,lang[,ua,referer]")
     args = p.parse_args()
     transcribe_files(args.dir, args.stations)

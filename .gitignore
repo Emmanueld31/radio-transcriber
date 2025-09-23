@@ -1,9 +1,8 @@
-# Output folders
+# Ignore outputs
 live_output/
 logs/
-
-# Python cache
-__pycache__/
-
-# macOS files
-.DS_Store
+*.wav
+*.txt
+*.tar.gz
+*.zip
+*.enc
