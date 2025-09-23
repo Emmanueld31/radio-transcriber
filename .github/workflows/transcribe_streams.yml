@@ -1,0 +1,66 @@
+name: Daily Radio Transcription
+
+on:
+  schedule:
+    - cron: "0 4 * * *"    # 04:00 UTC (≈ 06:00–07:00 Amsterdam depending on DST)
+  workflow_dispatch:
+
+concurrency:
+  group: radio-transcribe
+  cancel-in-progress: false
+
+jobs:
+  record-and-transcribe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Cache Whisper / HF / CTranslate2
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/faster_whisper
+            ~/.cache/huggingface
+            ~/.cache/ctranslate2
+          key: ${{ runner.os }}-fw-${{ hashFiles('requirements.txt', 'transcribe_only.py', 'run_workflow.sh', 'stations.csv') }}
+          restore-keys: |
+            ${{ runner.os }}-fw-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg coreutils
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ensure launcher is executable
+        run: chmod +x run_workflow.sh
+
+      - name: Record & Transcribe
+        env:
+          DURATION_SECONDS: "1800"    # 30 min
+          GRACE_SECONDS: "120"        # extra guard
+          OUTPUT_DIR: "live_output"
+          LOG_DIR: "logs"
+          STATIONS_FILE: "stations.csv"
+        run: ./run_workflow.sh
+
+      - name: Upload transcripts and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transcripts-${{ github.run_id }}
+          path: |
+            live_output/
+            logs/
+          retention-days: 14
+          if-no-files-found: warn
