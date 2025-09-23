@@ -1,0 +1,8 @@
+# name,url,lang
+FranceInfo,https://icecast.radiofrance.fr/franceinfo-hifi.aac,fr
+Deutschlandfunk,https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3,de
+BBCWorld,https://listen-bbc-world-service.ng.akacast.akamaized.net/7/349/521238/v1/ibb.akacast.akamaized.net/listen-bbc-world-service,en
+LBC,https://media-ssl.musicradio.com/LBCUK,en
+RaiRadio,https://icestream.rai.it/1.mp3,it
+RNERadio,https://rtvelivestreams.akamaized.net/rtve-live-radio-rne-radio5/playlist.m3u8,es
+CNN,https://tunein.streamguys1.com/cnnen,en

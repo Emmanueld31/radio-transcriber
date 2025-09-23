@@ -1,0 +1,9 @@
+# Output folders
+live_output/
+logs/
+
+# Python cache
+__pycache__/
+
+# macOS files
+.DS_Store
