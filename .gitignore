@@ -6,3 +6,4 @@ logs/
 *.tar.gz
 *.zip
 *.enc
+decrypt.sh
