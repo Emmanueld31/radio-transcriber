@@ -67,12 +67,12 @@ jobs:
         run: |
           if [ -f transcripts.tar.gz ]; then
             openssl enc -aes-256-cbc -salt -pbkdf2 \
-              -in transcripts.tar.gz -out transcripts.enc \
+              -in transcripts.tar.gz -out transcripts.tar.gz.enc \
               -pass env:ARTIFACT_PASS
           fi
           if [ -f logs.tar.gz ]; then
             openssl enc -aes-256-cbc -salt -pbkdf2 \
-              -in logs.tar.gz -out logs.enc \
+              -in logs.tar.gz -out logs.tar.gz.enc \
               -pass env:ARTIFACT_PASS
           fi
 
@@ -82,6 +82,6 @@ jobs:
         with:
           name: encrypted-${{ github.run_id }}
           path: |
-            transcripts.enc
-            logs.enc
+            transcripts.tar.gz.enc
+            logs.tar.gz.enc
           retention-days: 14
