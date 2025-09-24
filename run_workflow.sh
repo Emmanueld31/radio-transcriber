@@ -51,8 +51,8 @@ preflight() {
 
 run_station() {
   local name="$1" url="$2" lang="$3" ua="$4" ref="$5"
-  local outdir="$OUTPUT_DIR/$name"
-  local wav="$outdir/$name.wav"
+  local outdir="$OUTPUT_DIR"
+  local wav="$OUTPUT_DIR/${name}.wav"
   local slog="$LOG_DIR/${name}.ffmpeg.log"
   mkdir -p "$outdir"
 
