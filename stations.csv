@@ -1,8 +1,8 @@
 # name,url,lang,ua,referer
 FranceInfo,https://icecast.radiofrance.fr/franceinfo-hifi.aac,fr,,
 Deutschlandfunk,https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3,de,,
-BBCWorld,https://stream.live.vc.bbcmedia.co.uk/bbc_world_service,en,"Mozilla/5.0","https://www.bbc.co.uk/"
+BBCWorld,https://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_world_service.m3u8,en,"Mozilla/5.0","https://www.bbc.co.uk/"
 LBC,https://media-ssl.musicradio.com/LBCUK,en,"Mozilla/5.0","https://www.lbc.co.uk/"
 RaiRadio,https://icestreaming.rai.it/1.mp3,it,"Mozilla/5.0","https://www.raiplayradio.it/"
-RNERadio,https://rne.rtveradio.cires21.com/rne_rne5_dat_med.mp3,es,"Mozilla/5.0","https://www.rtve.es/"
+CanedaSER,https://playerservices.streamtheworld.com/api/livestream-redirect/CADENASERAAC.aac,es,"Mozilla/5.0","https://cadenaser.com/"
 CNN,https://tunein.streamguys1.com/cnnen,en,"Mozilla/5.0","https://tunein.com/"
