@@ -7,3 +7,7 @@ logs/
 *.zip
 *.enc
 decrypt.sh
+*.log
+*.csv
+!stations.csv
+.DS_Store
