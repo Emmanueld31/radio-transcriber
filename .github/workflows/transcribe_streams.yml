@@ -2,7 +2,7 @@ name: Daily Radio Transcription
 
 on:
   schedule:
-    - cron: "0 4 * * *"   # 04:00 UTC (~06:00–07:00 Amsterdam)
+    - cron: "0 4 * * *"   # 04:00 UTC (~06:00–07:00 Amsterdam depending on DST)
   workflow_dispatch:
 
 concurrency:
@@ -47,24 +47,39 @@ jobs:
 
       - name: Record & Transcribe
         env:
-          DURATION_SECONDS: "1800"
-          GRACE_SECONDS: "120"
+          # --- Recording config ---
+          DURATION_SECONDS: "1800"       # 30 min capture
+          GRACE_SECONDS: "120"           # extra time for late finishers (optional)
           OUTPUT_DIR: "live_output"
           LOG_DIR: "logs"
           STATIONS_FILE: "stations.csv"
+
+          # --- Inference knobs picked up by transcribe_only.py ---
+          CT2_CPU_THREADS: "2"           # match 2-core runner
+          WHISPER_VAD: "1"               # VAD ON (skip silence/music)
+          WHISPER_PROBE_SECONDS: "90"    # probe length
+          WHISPER_THRESH_GOOD: "-0.80"   # greedy if >= this
+          WHISPER_THRESH_BAD:  "-0.90"   # fallback beam if <
+          WHISPER_GREEDY_BEAM: "1"       # greedy path
+          WHISPER_FALLBACK_BEAM: "5"     # accuracy rescue
+          # WHISPER_MODEL: "small"       # (optional, default in code)
+
         run: ./run_workflow.sh
 
       - name: Package outputs
         if: always()
         run: |
+          set -euo pipefail
           tar -czf transcripts.tar.gz -C live_output . || true
           tar -czf logs.tar.gz -C logs . || true
+          ls -lh *.tar.gz || true
 
       - name: Encrypt packages
         if: always()
         env:
           ARTIFACT_PASS: ${{ secrets.ARTIFACT_PASS }}
         run: |
+          set -euo pipefail
           if [ -f transcripts.tar.gz ]; then
             openssl enc -aes-256-cbc -salt -pbkdf2 \
               -in transcripts.tar.gz -out transcripts.tar.gz.enc \
@@ -75,6 +90,7 @@ jobs:
               -in logs.tar.gz -out logs.tar.gz.enc \
               -pass env:ARTIFACT_PASS
           fi
+          ls -lh *.enc || true
 
       - name: Upload encrypted artifacts
         if: always()
@@ -85,3 +101,4 @@ jobs:
             transcripts.tar.gz.enc
             logs.tar.gz.enc
           retention-days: 14
+          if-no-files-found: warn
