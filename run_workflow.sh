@@ -5,16 +5,16 @@ set -euo pipefail
 trap 'echo "[trap] Stopping background recorders..."; kill $(jobs -p) >/dev/null 2>&1 || true' EXIT
 
 # --- Config from env (with sensible defaults) ---
-DURATION_SECONDS="${DURATION_SECONDS:-1800}"
-GRACE_SECONDS="${GRACE_SECONDS:-120}"
+DURATION_SECONDS="${DURATION_SECONDS:-1800}"   # 30 minutes
+GRACE_SECONDS="${GRACE_SECONDS:-120}"          # pause before transcription
 OUTPUT_DIR="${OUTPUT_DIR:-live_output}"
 LOG_DIR="${LOG_DIR:-logs}"
 STATIONS_FILE="${STATIONS_FILE:-stations.csv}"
 
 # Recording robustness
-MAX_RETRIES="${MAX_RETRIES:-2}"               # total attempts per station (1 initial + retries-1)
+MAX_RETRIES="${MAX_RETRIES:-2}"                # attempts per station (1 initial + retries-1)
 SLEEP_BETWEEN_RETRIES="${SLEEP_BETWEEN_RETRIES:-5}"
-MIN_BYTES="${MIN_BYTES:-65536}"               # <64KB => treat as failed
+MIN_BYTES="${MIN_BYTES:-65536}"                # <64KB => treat as failed
 # ------------------------------------------------
 
 mkdir -p "$OUTPUT_DIR" "$LOG_DIR"
@@ -35,6 +35,7 @@ command -v ffprobe >/dev/null || { echo "WARN: ffprobe not found"; }
 sed -i 's/\r$//' "$STATIONS_FILE" || true
 
 # --- Load stations: name,url,lang,cc[,ua,referer] OR name,url,lang[,ua,referer] ---
+# We only need name+url for recording; lang/cc are read later by transcribe_only.py.
 mapfile -t NAMES < <(awk -F',' 'BEGIN{OFS=","} /^[[:space:]]*#/ {next} NF>=3 {gsub(/^[[:space:]]+|[[:space:]]+$/,"",$1); if($1!="") print $1}' "$STATIONS_FILE")
 mapfile -t URLS  < <(awk -F',' 'BEGIN{OFS=","} /^[[:space:]]*#/ {next} NF>=2 {gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); if($2!="") print $2}' "$STATIONS_FILE")
 mapfile -t UAS   < <(awk -F',' 'BEGIN{OFS=","} /^[[:space:]]*#/ {next}      {gsub(/^[[:space:]]+|[[:space:]]+$/,"",$5); print $5}' "$STATIONS_FILE" 2>/dev/null || true)
@@ -48,7 +49,7 @@ if [ "${#NAMES[@]}" -ne "${#URLS[@]}" ]; then
 fi
 COUNT=$(( ${#NAMES[@]} < ${#URLS[@]} ? ${#NAMES[@]} : ${#URLS[@]} ))
 
-# helper: GNU stat size (we installed coreutils on GitHub runner)
+# Helper: GNU stat size (coreutils installed by workflow)
 file_size() { stat -c%s -- "$1" 2>/dev/null || echo 0; }
 
 record_one() {
@@ -67,14 +68,13 @@ record_one() {
   while [ "$attempt" -le "$MAX_RETRIES" ]; do
     echo "[$(date '+%F %T')] $name attempt $attempt/$MAX_RETRIES"
 
-    # Run ffmpeg
+    # IMPORTANT: force container explicitly (-f wav) since temp name ends with .wav.part
     if ffmpeg -hide_banner -loglevel error -nostdin \
         -reconnect 1 -reconnect_streamed 1 -reconnect_on_network_error 1 \
         -reconnect_on_http_error 4xx,5xx -rw_timeout 15000000 \
         "${extra_flags[@]}" \
         -i "$url" -t "$DURATION_SECONDS" \
-        -ac 1 -ar 16000 -c:a pcm_s16le "$tmp" 2>> "$slog"; then
-      # Success exit code; now verify size
+        -ac 1 -ar 16000 -c:a pcm_s16le -f wav "$tmp" 2>> "$slog"; then
       local sz
       sz=$(file_size "$tmp")
       if [ "$sz" -ge "$MIN_BYTES" ]; then
