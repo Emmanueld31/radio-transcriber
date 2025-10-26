@@ -2,9 +2,9 @@ name: Daily Radio Transcription
 
 on:
   schedule:
-    - cron: "45 3 * * 1-5"   # 04:00 UTC (~06:00–07:00 Monday to Friday)
-    - cron: "45 4 * * 6"   # 05:00 UTC (~07:00–08:00 Saturday)
-    - cron: "45 4 * * 0"   # 05:00 UTC (~07:00–08:00 Sunday)
+    - cron: "45 4 * * 1-5"   # 04:00 UTC (~06:00–07:00 Monday to Friday)
+    - cron: "45 5 * * 6"   # 05:00 UTC (~07:00–08:00 Saturday)
+    - cron: "45 5 * * 0"   # 05:00 UTC (~07:00–08:00 Sunday)
   workflow_dispatch:
 
 concurrency:
@@ -50,7 +50,7 @@ jobs:
       - name: Record & Transcribe
         env:
           # --- Recording config ---
-          DURATION_SECONDS: "1800"       # 30 min capture
+          DURATION_SECONDS: "2400"       # 40 min capture
           GRACE_SECONDS: "120"           # extra time for late finishers (optional)
           OUTPUT_DIR: "live_output"
           LOG_DIR: "logs"
